@@ -4,6 +4,12 @@
 
 package frc.robot;
 
+
+import static edu.wpi.first.units.Units.*;
+
+import edu.wpi.first.units.measure.LinearVelocity;
+import edu.wpi.first.units.measure.Time;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
  * constants. This class should not be used for any other purpose. All constants should be declared
@@ -15,5 +21,24 @@ package frc.robot;
 public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
+  }
+
+  public static class DriveConstants {
+    public static LinearVelocity maxSpeed = FeetPerSecond.of(3);
+  }
+
+  public static class ShooterConstants {
+    //CAN IDs
+    public static int shooterCANId = 0; //TODO: Change these ports
+    public static int feederCANId = 0;
+
+    //Speeds
+    public static final double feederMaxSpeed = 0;
+    public static final double shooterMaxSpeed = 0;
+    public static final Time shootToFeedDelay = Seconds.of(1);
+  }
+
+  public static class VisionConstants {
+    public static String limelightName = "";
   }
 }
