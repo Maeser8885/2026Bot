@@ -8,6 +8,13 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.ExampleSubsystem;
+
+import com.revrobotics.AbsoluteEncoder;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+
+import edu.wpi.first.wpilibj.AnalogEncoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -20,6 +27,22 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
+
+  AnalogEncoder frEncoder = new AnalogEncoder(2);
+  AnalogEncoder flEncoder = new AnalogEncoder(1);
+  AnalogEncoder brEncoder = new AnalogEncoder(3);
+  AnalogEncoder blEncoder = new AnalogEncoder(0);
+
+  SparkMax frdMotor = new SparkMax(55, MotorType.kBrushless);
+  SparkMax fldMotor = new SparkMax(57, MotorType.kBrushless);
+  SparkMax brdMotor = new SparkMax(53, MotorType.kBrushless);
+  SparkMax bldMotor = new SparkMax(62, MotorType.kBrushless);
+
+  SparkMax frtMotor = new SparkMax(56, MotorType.kBrushless);
+  SparkMax fltMotor = new SparkMax(49, MotorType.kBrushless);
+  SparkMax brtMotor = new SparkMax(60, MotorType.kBrushless);
+  SparkMax bltMotor = new SparkMax(59, MotorType.kBrushless);
+
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -59,5 +82,24 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
     return Autos.exampleAuto(m_exampleSubsystem);
+  }
+
+  public void debugPeriodic(){
+    SmartDashboard.putNumber("FREncoder", frEncoder.get());
+    SmartDashboard.putNumber("FLEncoder", flEncoder.get());
+    SmartDashboard.putNumber("BREncoder", brEncoder.get());
+    SmartDashboard.putNumber("BLEncoder", blEncoder.get());
+
+    SmartDashboard.putNumber("FRD REL ENCODER", frdMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("FLD REL ENCODER", fldMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("BRD REL ENCODER", brdMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("BLD REL ENCODER", bldMotor.getEncoder().getPosition());
+
+    SmartDashboard.putNumber("FRT REL ENCODER", frtMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("FLT REL ENCODER", fltMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("BRT REL ENCODER", brtMotor.getEncoder().getPosition());
+    SmartDashboard.putNumber("BLT REL ENCODER", bltMotor.getEncoder().getPosition());
+
+
   }
 }

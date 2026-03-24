@@ -32,6 +32,9 @@ public final class Constants {
     public static int shooterCANId = 0; //TODO: Change these ports
     public static int feederCANId = 0;
 
+    public static int shooterPort = 0;
+    public static int FeederPort = 0;
+
     //Speeds
     public static final double feederMaxSpeed = 0;
     public static final double shooterMaxSpeed = 0;
