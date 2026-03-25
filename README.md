@@ -229,6 +229,19 @@ YAGSL is configured via JSON files in `src/main/deploy/swerve/`:
 
 These JSON files are deployed to the roboRIO at `/home/lvuser/deploy/swerve/` and read by YAGSL at runtime.
 
+## Robot Plan
+
+See **[plan.md](plan.md)** for the complete robot plan. This is the primary document students should use to write the robot code. It includes:
+
+- **Robot overview** — game strategy, physical layout, 2-driver control scheme
+- **Information checklist** — everything the electrical/mechanical team needs to provide (CAN IDs, analog input channels, motor types, gear ratios) with fill-in-the-blank fields
+- **Subsystem details** — hardware, states, and behaviors for the swerve drivetrain, kitbot shooter, and over-the-bumper intake
+- **Control mappings** — every button/stick assignment for both driver and operator controllers
+- **Autonomous routine** — step-by-step "drive forward and shoot" sequence
+- **Coding tasks** — prioritized checklist of every class, method, command, and binding that needs to be written, organized by subsystem
+- **REVLib 2026 API reference** — class renames, import paths, and the new config-object pattern with code examples
+- **What you can code now vs. what needs the robot** — students can write all code immediately using placeholder values
+
 ## Building and Deploying
 
 **Build the project:**
