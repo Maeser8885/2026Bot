@@ -7,11 +7,14 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
+import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
 
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.studica.frc.AHRS;
+import com.studica.frc.AHRS.NavXComType;
 
 import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,6 +31,9 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
 
+  //TODO UNCOMMENT THIS
+  //DriveSubsystem m_driveSubsystem = new DriveSubsystem();
+
   AnalogEncoder frEncoder = new AnalogEncoder(2);
   AnalogEncoder flEncoder = new AnalogEncoder(1);
   AnalogEncoder brEncoder = new AnalogEncoder(3);
@@ -43,16 +49,27 @@ public class RobotContainer {
   SparkMax brtMotor = new SparkMax(60, MotorType.kBrushless);
   SparkMax bltMotor = new SparkMax(59, MotorType.kBrushless);
 
+  AHRS navX = new AHRS(NavXComType.kMXP_SPI);
+
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController =
-      new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  //TODO uncomment this
+  // private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
+
+    /* TODO UNCOMMENT THIS WHEN SWERVE READY
     configureBindings();
+    m_driveSubsystem.setDefaultCommand(m_driveSubsystem.driveDirectAngleFO(
+      () -> m_driverController.getRawAxis(0),//LEFT X
+      () -> -m_driverController.getRawAxis(1),//LEFT Y
+      () -> m_driverController.getRawAxis(2),//RIGHT X
+      () -> -m_driverController.getRawAxis(3)//RIGHT Y
+      ));
+      */
   }
 
   /**
@@ -71,7 +88,7 @@ public class RobotContainer {
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
+    //m_driverController.b().whileTrue(m_exampleSubsystem.exampleMethodCommand());
   }
 
   /**
@@ -85,10 +102,10 @@ public class RobotContainer {
   }
 
   public void debugPeriodic(){
-    SmartDashboard.putNumber("FREncoder", frEncoder.get());
-    SmartDashboard.putNumber("FLEncoder", flEncoder.get());
-    SmartDashboard.putNumber("BREncoder", brEncoder.get());
-    SmartDashboard.putNumber("BLEncoder", blEncoder.get());
+    SmartDashboard.putNumber("FREncoder ABSOLUTE", frEncoder.get());
+    SmartDashboard.putNumber("FLEncoder ABSOLUTE", flEncoder.get());
+    SmartDashboard.putNumber("BREncoder ABSOLUTE", brEncoder.get());
+    SmartDashboard.putNumber("BLEncoder ABSOLUTE", blEncoder.get());
 
     SmartDashboard.putNumber("FRD REL ENCODER", frdMotor.getEncoder().getPosition());
     SmartDashboard.putNumber("FLD REL ENCODER", fldMotor.getEncoder().getPosition());
@@ -100,6 +117,7 @@ public class RobotContainer {
     SmartDashboard.putNumber("BRT REL ENCODER", brtMotor.getEncoder().getPosition());
     SmartDashboard.putNumber("BLT REL ENCODER", bltMotor.getEncoder().getPosition());
 
+    SmartDashboard.putNumber("NAVX YAW", navX.getYaw());
 
   }
 }
