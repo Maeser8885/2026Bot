@@ -6,9 +6,9 @@ This document describes the physical robot, its subsystems, controls, autonomous
 
 ## 1. Robot Overview
 
-- **Chassis**: Square frame (exact dimensions TBD)
+- **Chassis**: Square frame (~21.25" front-to-back x ~20.75" side-to-side, based on module locations)
 - **Drivetrain**: Swerve drive (4 independent modules)
-- **Weight**: TBD
+- **Weight**: ~110 lbs
 - **Game**: REBUILT (2026 FRC game)
 - **Game pieces**: FUEL — 5.91-inch diameter yellow high-density foam balls
 - **Scoring**: Score fuel into the Hub (central field structure). Climb the Tower in endgame for bonus points.
@@ -28,36 +28,36 @@ Use the REV Hardware Client (plug each Spark Max in via USB) to read or assign C
 
 **Total Spark Maxes on the robot: 12** (8 swerve + 2 shooter + 2 intake). If you count a different number of Spark Maxes physically wired, something is wrong — investigate before powering on.
 
-- [ ] Front-left swerve module — drive motor Spark Max CAN ID: ___
-- [ ] Front-left swerve module — steer motor Spark Max CAN ID: ___
-- [ ] Front-left swerve module — Thrifty encoder roboRIO analog input channel: ___
-- [ ] Front-right swerve module — drive motor Spark Max CAN ID: ___
-- [ ] Front-right swerve module — steer motor Spark Max CAN ID: ___
-- [ ] Front-right swerve module — Thrifty encoder roboRIO analog input channel: ___
-- [ ] Back-left swerve module — drive motor Spark Max CAN ID: ___
-- [ ] Back-left swerve module — steer motor Spark Max CAN ID: ___
-- [ ] Back-left swerve module — Thrifty encoder roboRIO analog input channel: ___
-- [ ] Back-right swerve module — drive motor Spark Max CAN ID: ___
-- [ ] Back-right swerve module — steer motor Spark Max CAN ID: ___
-- [ ] Back-right swerve module — Thrifty encoder roboRIO analog input channel: ___
-- [ ] Shooter — launcher motor Spark Max CAN ID: ___
-- [ ] Shooter — feeder motor Spark Max CAN ID: ___
-- [ ] Intake — arm motor Spark Max CAN ID: ___
-- [ ] Intake — roller motor Spark Max CAN ID: ___
-- [ ] Confirm all swerve Spark Maxes are set to **brushless mode** (NEO motors)
+- [x] Front-left swerve module — drive motor Spark Max CAN ID: **57**
+- [x] Front-left swerve module — steer motor Spark Max CAN ID: **49**
+- [x] Front-left swerve module — Thrifty encoder roboRIO analog input channel: **1**
+- [x] Front-right swerve module — drive motor Spark Max CAN ID: **55**
+- [x] Front-right swerve module — steer motor Spark Max CAN ID: **56**
+- [x] Front-right swerve module — Thrifty encoder roboRIO analog input channel: **2**
+- [x] Back-left swerve module — drive motor Spark Max CAN ID: **62**
+- [x] Back-left swerve module — steer motor Spark Max CAN ID: **59**
+- [x] Back-left swerve module — Thrifty encoder roboRIO analog input channel: **0**
+- [x] Back-right swerve module — drive motor Spark Max CAN ID: **53**
+- [x] Back-right swerve module — steer motor Spark Max CAN ID: **60**
+- [x] Back-right swerve module — Thrifty encoder roboRIO analog input channel: **3**
+- [ ] Shooter — launcher motor Spark Max CAN ID: ___ *(still needed)*
+- [ ] Shooter — feeder motor Spark Max CAN ID: ___ *(still needed)*
+- [ ] Intake — arm motor Spark Max CAN ID: ___ *(still needed)*
+- [ ] Intake — roller motor Spark Max CAN ID: ___ *(still needed)*
+- [x] Confirm all swerve Spark Maxes are set to **brushless mode** (NEO motors) — configured in YAGSL JSON as `sparkmax_neo`
 - [ ] Confirm shooter Spark Maxes are set to **brushed mode** (CIM motors)
 - [ ] Confirm intake arm Spark Max is set to **brushless mode** (NEO motor)
 - [ ] Confirm intake roller Spark Max is set to the correct mode — **brushed or brushless depending on the motor type** (unknown until roller motor is identified)
 
 ### MUST HAVE — From Electrical / Mechanical (hardware details)
 
-- [ ] **Gyro / IMU type and connection** — NavX via USB? NavX via MXP? Pigeon2 via CAN (and CAN ID)? What's actually on the robot?
+- [x] **Gyro / IMU type and connection** — **NavX via SPI** (configured as `navx_spi` in YAGSL)
 - [ ] **Intake roller motor type** — What motor is it? (NEO, NEO 550, CIM, mini-CIM, BAG, other?) Brushed or brushless? This determines the Spark Max mode setting.
 - [ ] **Intake arm gear ratio** — What is the gear reduction between the NEO and the arm pivot? (e.g., 100:1, 64:1, etc.) Needed to convert encoder rotations to arm degrees.
-- [ ] **Swerve module gear ratio** — Which MK4n variant? L1, L2, or L3? Check the order receipt or look at the gears physically. Needed for YAGSL config.
-- [ ] **Robot dimensions** — Track width and wheelbase (center-to-center distance between swerve modules, front-to-back and side-to-side). Should be equal since the chassis is square.
-- [ ] **Robot weight** — Approximate weight in pounds or kg. Used for physics simulation and YAGSL config.
-- [ ] **Swerve wheel diameter** — Should be standard for MK4n but confirm (typically 4 inches / ~0.1016m for colson, or 3 inches for billet).
+- [x] **Swerve module gear ratio** — Drive gear ratio: **5.9:1**, Angle gear ratio: **18.75:1** (configured in YAGSL physicalproperties.json)
+- [x] **Robot dimensions** — Module locations from center: front/back **10.625"**, left/right **10.375"** (track width ~20.75", wheelbase ~21.25")
+- [x] **Robot weight** — **110.23 lbs** (configured in YAGSL physicalproperties.json)
+- [x] **Swerve wheel diameter** — **4 inches** (configured in YAGSL physicalproperties.json)
 - [ ] **Driver camera** — Is a USB camera physically installed? Where is it mounted?
 - [ ] **Limelight** — Is it installed? What model (Limelight 2, 3, 4)? Where is it mounted (height from ground, angle, offset from robot center)?
 
@@ -107,15 +107,15 @@ These values need to be found experimentally. Start with the suggested defaults,
 
 **Hardware per module**:
 
-| Component | Type | Controller | ID / Port |
-|-----------|------|------------|-----------|
-| Drive motor | NEO | Spark Max | CAN ID: TBD |
-| Steer motor | NEO | Spark Max | CAN ID: TBD |
-| Absolute encoder | Thrifty Absolute Encoder (analog) | — | roboRIO Analog Input: TBD |
+| Component | Type | Controller | FL | FR | BL | BR |
+|-----------|------|------------|-----|-----|-----|-----|
+| Drive motor | NEO | Spark Max | CAN 57 | CAN 55 | CAN 62 | CAN 53 |
+| Steer motor | NEO | Spark Max | CAN 49 | CAN 56 | CAN 59 | CAN 60 |
+| Absolute encoder | Thrifty (analog) | — | Analog 1 | Analog 2 | Analog 0 | Analog 3 |
 
-**Gyro / IMU**: TBD (NavX USB is in the current config — confirm on the actual robot)
+**Gyro / IMU**: NavX via SPI (`navx_spi`)
 
-**Gear ratio**: TBD (MK4n modules come in L1, L2, L3 ratios — check the module order or the physical gears)
+**Gear ratio**: Drive **5.9:1**, Angle **18.75:1**
 
 **Swerve library**: YAGSL — configured via JSON files in `src/main/deploy/swerve/`
 
