@@ -157,7 +157,7 @@ These values need to be found experimentally. Start with the suggested defaults,
 **Key behaviors**:
 - **Rev-up then shoot sequence**: Driver holds right trigger to rev the launcher motor. After ~1 second spin-up, the feeder automatically engages and launches the fuel. Release the trigger to stop everything.
 - **Feeder only spins in one direction** (toward the launcher). The intake side of the kitbot feeder roller is not used — a separate front-mounted intake handles that job.
-- **Motor directions**: The launcher and feeder motors may need to be inverted relative to each other depending on how they're mounted. **Test on the robot** — if a motor spins the wrong way, call `motor.setInverted(true)` in the subsystem constructor. Get this right before tuning voltages.
+- **Motor directions**: The launcher and feeder motors may need to be inverted relative to each other depending on how they're mounted. **Test on the robot** — if a motor spins the wrong way, set `config.inverted(true)` on the `SparkMaxConfig` for that motor (see REVLib 2026 API table in section 5). Get this right before tuning voltages.
 - **Open-loop control**: No encoder feedback. Motors run at set voltage levels. CIM motors on Spark Maxes in brushed mode don't have built-in encoders, so speed is controlled by voltage output, not closed-loop PID.
 - **Current limits**: Should be set to ~60A per motor to prevent brownouts (CIMs draw a lot of current at stall).
 
@@ -195,9 +195,9 @@ These values need to be found experimentally. Start with the suggested defaults,
 - **Stow**: Arm motor rotates arms back from deployed to stowed.
 - **Intake**: With arms deployed, roller motor spins to grab fuel off the ground. Rollers pull fuel up over the bumper and into the storage area.
 - **Position hold with compliance**: While intaking, the arm holds its deployed position via PID, but needs to allow slight upward "give" when fuel pushes against the rollers as it enters. This can be achieved by capping the PID output (limiting the maximum downward force the motor applies), so the arm is firm enough to stay near the ground but soft enough that a fuel ball can push it up slightly as it passes through. Alternatively, a lower P gain or a current-limit approach can achieve this.
-- **Software limits**: The arm motor must be software-limited to prevent rotating past stowed (0°) or past deployed (~120°). Use `setSoftLimit()` on the Spark Max to enforce this — protects the mechanism even if the code has bugs.
+- **Software limits**: The arm motor must be software-limited to prevent rotating past stowed (0°) or past deployed (~120°). Use the `SparkMaxConfig` soft limit settings (e.g., `config.softLimit.forwardSoftLimit(120.0)`) to enforce this — protects the mechanism even if the code has bugs. See the REVLib 2026 config-object pattern in section 5.
 - **Arm gearing**: The arm motor is geared down for torque. The gear ratio affects the encoder-to-angle conversion — the encoder counts per degree of arm rotation must be calculated from the gear ratio. This is needed to set accurate PID position targets.
-- **Motor directions**: The arm motor direction determines which way is "deploy" vs "stow" — **test on the robot with low power first.** If the arm goes the wrong way, call `motor.setInverted(true)`. Same for the roller motor — it should spin to pull fuel inward toward the robot. Get directions right before tuning anything else.
+- **Motor directions**: The arm motor direction determines which way is "deploy" vs "stow" — **test on the robot with low power first.** If the arm goes the wrong way, set `config.inverted(true)` on that motor's `SparkMaxConfig` (see REVLib 2026 API table in section 5). Same for the roller motor — it should spin to pull fuel inward toward the robot. Get directions right before tuning anything else.
 
 ---
 
@@ -296,9 +296,9 @@ Code these in this order. Each builds on the previous:
 - Driver camera setup (`CameraServer.startAutomaticCapture()`)
 
 **Needs real values BEFORE deploying to the robot (but code compiles without them):**
-- CAN IDs in `Constants.java` — swap placeholders for real IDs from electrical team
-- Analog input channels for Thrifty encoders in YAGSL JSON files
-- YAGSL module JSON files — CAN IDs, encoder offsets, module locations, gear ratio
+- Shooter and intake CAN IDs in `Constants.java` — swap placeholders for real IDs from electrical team
+- Swerve CAN IDs, Thrifty encoder analog input channels, encoder offsets, module locations, and gear ratio — all in the YAGSL JSON files under `src/main/deploy/swerve/modules/`
+- Gyro/IMU type — in `swervedrive.json`
 - Starting tuning values (voltages, PID gains, speeds) — use the suggested defaults from section 1b
 
 **Can ONLY be determined on the physical robot:**
@@ -367,14 +367,12 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
 
 ### 5.1 Drivetrain
 
-- [ ] **Constants**: Define in `Constants.java`
-  - Swerve module CAN IDs (drive motors, steer motors) — 8 CAN IDs total
-  - Swerve module analog input channels (Thrifty absolute encoders) — 4 channels total (roboRIO has analog inputs 0-3)
-  - Gyro type and connection
+- [ ] **Constants**: Define in `Constants.java` (inner class `DrivetrainConstants`)
   - Drive speed limits (max translational m/s, max rotational rad/s)
   - Slow mode multiplier
   - Deadband values for joystick input
   - Field-oriented default (should be `true` — field-oriented on startup)
+  - **Note**: Swerve CAN IDs, encoder channels, and gyro config do NOT go in `Constants.java` — they go in the YAGSL JSON config files (see below). YAGSL reads its configuration entirely from JSON.
 
 - [ ] **YAGSL JSON config**: Fill in `src/main/deploy/swerve/` files
   - `swervedrive.json` — confirm IMU type
@@ -542,6 +540,16 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
   - Add `kOperatorControllerPort = 1` to `Constants.OperatorConstants`
   - All mechanism bindings (intake, shooter) go on this controller
   - The existing driver controller on port 0 is only for drivetrain
+
+- [ ] **Test mode**: Create a `TestMode.java` class that lets you spin individual motors one at a time at low speed to verify wiring, CAN IDs, and motor directions. Runs when the Driver Station is set to "Test" mode. Controls (on the operator controller):
+  - D-pad Up/Down — cycle through motors (Launcher, Feeder, Intake Roller)
+  - Right stick Y — spin the selected motor (capped at 20% output for safety)
+  - Right bumper — nudge the intake arm +5° toward deployed
+  - Left bumper — nudge the intake arm −5° toward stowed
+  - B button — emergency stop all motors
+  - The intake arm is NOT in the free-spin list because it has physical travel limits — the bumper nudge uses PID position control in small increments so you can't slam it into the frame
+  - Wire it up in `Robot.java`: call `testMode.init()` in `testInit()` and `testMode.periodic()` in `testPeriodic()`
+  - **Tip**: Before using test mode in code, test each Spark Max individually with the **REV Hardware Client** over USB — that lets you verify CAN IDs and brushed/brushless mode without deploying any code
 
 - [ ] **Dashboard**: Publish key data so the drive team can see robot state. **Note**: SmartDashboard and Shuffleboard are deprecated in 2026 (removed in 2027). Use **Elastic** (by Team 353) as the dashboard instead — it reads from NetworkTables just like SmartDashboard did. You can still use `SmartDashboard.putNumber()`/`putString()`/`putBoolean()` calls in code to publish data (the calls write to NetworkTables, which Elastic reads), but the SmartDashboard _application_ itself should not be used.
   - Swerve module states, gyro heading, robot pose
