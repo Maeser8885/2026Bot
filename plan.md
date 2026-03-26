@@ -40,26 +40,26 @@ Use the REV Hardware Client (plug each Spark Max in via USB) to read or assign C
 - [x] Back-right swerve module — drive motor Spark Max CAN ID: **53**
 - [x] Back-right swerve module — steer motor Spark Max CAN ID: **60**
 - [x] Back-right swerve module — Thrifty encoder roboRIO analog input channel: **3**
-- [ ] Shooter — launcher motor Spark Max CAN ID: ___ *(still needed)*
-- [ ] Shooter — feeder motor Spark Max CAN ID: ___ *(still needed)*
-- [ ] Intake — arm motor Spark Max CAN ID: ___ *(still needed)*
-- [ ] Intake — roller motor Spark Max CAN ID: ___ *(still needed)*
+- [x] Shooter — launcher motor Spark Max CAN ID: **58**
+- [x] Shooter — feeder motor Spark Max CAN ID: **54**
+- [x] Intake — arm motor Spark Max CAN ID: **50**
+- [x] Intake — roller motor Spark Max CAN ID: **48**
 - [x] Confirm all swerve Spark Maxes are set to **brushless mode** (NEO motors) — configured in YAGSL JSON as `sparkmax_neo`
-- [ ] Confirm shooter Spark Maxes are set to **brushed mode** (CIM motors)
-- [ ] Confirm intake arm Spark Max is set to **brushless mode** (NEO motor)
-- [ ] Confirm intake roller Spark Max is set to the correct mode — **brushed or brushless depending on the motor type** (unknown until roller motor is identified)
+- [x] Confirm shooter Spark Maxes are set to **brushed mode** (CIM motors)
+- [x] Confirm intake arm Spark Max is set to **brushless mode** (NEO motor)
+- [x] Confirm intake roller Spark Max is set to **brushless mode** (NEO Vortex kmotor)
 
 ### MUST HAVE — From Electrical / Mechanical (hardware details)
 
 - [x] **Gyro / IMU type and connection** — **NavX via SPI** (configured as `navx_spi` in YAGSL)
-- [ ] **Intake roller motor type** — What motor is it? (NEO, NEO 550, CIM, mini-CIM, BAG, other?) Brushed or brushless? This determines the Spark Max mode setting.
-- [ ] **Intake arm gear ratio** — What is the gear reduction between the NEO and the arm pivot? (e.g., 100:1, 64:1, etc.) Needed to convert encoder rotations to arm degrees.
+- [x] **Intake roller motor type** — **NEO Vortex** (brushless). Spark Max must be in brushless mode.
+- [x] **Intake arm gear ratio** — **20:1** (1:20 reduction between NEO and arm pivot)
 - [x] **Swerve module gear ratio** — Drive gear ratio: **5.9:1**, Angle gear ratio: **18.75:1** (configured in YAGSL physicalproperties.json)
 - [x] **Robot dimensions** — Module locations from center: front/back **10.625"**, left/right **10.375"** (track width ~20.75", wheelbase ~21.25")
 - [x] **Robot weight** — **110.23 lbs** (configured in YAGSL physicalproperties.json)
 - [x] **Swerve wheel diameter** — **4 inches** (configured in YAGSL physicalproperties.json)
-- [ ] **Driver camera** — Is a USB camera physically installed? Where is it mounted?
-- [ ] **Limelight** — Is it installed? What model (Limelight 2, 3, 4)? Where is it mounted (height from ground, angle, offset from robot center)?
+- [ ] **Driver camera** — Not yet installed. *(still needed)*
+- [ ] **Limelight** — **Limelight 4** acquired, not yet mounted. Mounting position (height from ground, angle, offset from robot center) still TBD.
 
 ### TUNE ON ROBOT — Discovered through testing
 
@@ -140,8 +140,8 @@ These values need to be found experimentally. Start with the suggested defaults,
 
 | Component | Type | Controller | CAN ID |
 |-----------|------|------------|--------|
-| Launcher motor | CIM (brushed) | Spark Max (brushed mode) | TBD |
-| Feeder motor | CIM (brushed) | Spark Max (brushed mode) | TBD |
+| Launcher motor | CIM (brushed) | Spark Max (brushed mode) | **58** |
+| Feeder motor | CIM (brushed) | Spark Max (brushed mode) | **54** |
 
 **No sensors** — shooting is entirely driver-controlled.
 
@@ -177,8 +177,8 @@ These values need to be found experimentally. Start with the suggested defaults,
 
 | Component | Type | Controller | CAN ID |
 |-----------|------|------------|--------|
-| Arm motor | NEO (brushless, geared for torque) | Spark Max (brushless mode) | TBD |
-| Roller motor | TBD (brushed or brushless — confirm on robot) | Spark Max | TBD |
+| Arm motor | NEO (brushless, geared 20:1 for torque) | Spark Max (brushless mode) | **50** |
+| Roller motor | NEO Vortex (brushless) | Spark Max (brushless mode) | **48** |
 | Arm encoder | NEO built-in encoder | (integrated) | — |
 
 **No external sensors or limit switches** — arm travel limits are enforced in software using the NEO's built-in encoder.
@@ -196,7 +196,7 @@ These values need to be found experimentally. Start with the suggested defaults,
 - **Intake**: With arms deployed, roller motor spins to grab fuel off the ground. Rollers pull fuel up over the bumper and into the storage area.
 - **Position hold with compliance**: While intaking, the arm holds its deployed position via PID, but needs to allow slight upward "give" when fuel pushes against the rollers as it enters. This can be achieved by capping the PID output (limiting the maximum downward force the motor applies), so the arm is firm enough to stay near the ground but soft enough that a fuel ball can push it up slightly as it passes through. Alternatively, a lower P gain or a current-limit approach can achieve this.
 - **Software limits**: The arm motor must be software-limited to prevent rotating past stowed (0°) or past deployed (~120°). Use the `SparkMaxConfig` soft limit settings (e.g., `config.softLimit.forwardSoftLimit(120.0)`) to enforce this — protects the mechanism even if the code has bugs. See the REVLib 2026 config-object pattern in section 5.
-- **Arm gearing**: The arm motor is geared down for torque. The gear ratio affects the encoder-to-angle conversion — the encoder counts per degree of arm rotation must be calculated from the gear ratio. This is needed to set accurate PID position targets.
+- **Arm gearing**: The arm motor is geared **20:1** for torque. The encoder conversion factor is `360.0 / 20.0 = 18.0` degrees per motor rotation. This is needed to set accurate PID position targets.
 - **Motor directions**: The arm motor direction determines which way is "deploy" vs "stow" — **test on the robot with low power first.** If the arm goes the wrong way, set `config.inverted(true)` on that motor's `SparkMaxConfig` (see REVLib 2026 API table in section 5). Same for the roller motor — it should spin to pull fuel inward toward the robot. Get directions right before tuning anything else.
 
 ---
@@ -306,11 +306,10 @@ Code these in this order. Each builds on the previous:
 - Encoder offsets — point all swerve modules forward, read the raw encoder values
 - All tuning values — PID gains, voltages, speeds, angles, deadbands
 
-**One unknown that barely matters:** The intake roller motor type is unknown (brushed vs brushless). Pick one and mark it with a TODO comment — it's a single enum value change (`MotorType.kBrushed` vs `MotorType.kBrushless`) when you find out:
+**Intake roller motor type is now known:** NEO Vortex (brushless). Use `MotorType.kBrushless`:
 ```java
-// TODO: Confirm motor type on robot. Change to kBrushless if it's a NEO/NEO550.
 private final SparkMax rollerMotor = new SparkMax(
-    IntakeConstants.kRollerMotorId, MotorType.kBrushed);
+    IntakeConstants.kRollerMotorId, MotorType.kBrushless);
 ```
 
 **Bottom line: Students can write ALL the code today. The robot is only needed for configuration values and tuning.**
