@@ -51,14 +51,8 @@ public class IntakeSubsystem extends SubsystemBase {
     // Arm motor — NEO (brushless), geared for torque
     armMotor = new SparkMax(IntakeConstants.kArmMotorId, MotorType.kBrushless);
 
-<<<<<<< HEAD
-    // Roller motor — TODO: Confirm motor type on robot.
-    // Change to kBrushless if it's a NEO/NEO550.
-    rollerMotor = new SparkMax(IntakeConstants.kRollerMotorId, MotorType.kBrushed);
-=======
     // Roller motor — NEO Vortex (brushless)
     rollerMotor = new SparkMax(IntakeConstants.kRollerMotorId, MotorType.kBrushless);
->>>>>>> 1e8b5f0cbe7ff02a3f73d7db1f3ca5c62a72c5ff
 
     // Configure arm motor
     SparkMaxConfig armConfig = new SparkMaxConfig();

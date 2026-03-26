@@ -14,15 +14,9 @@ package frc.robot;
  *   <li>{@link AutoConstants} — autonomous drive speed and duration</li>
  * </ul>
  *
-<<<<<<< HEAD
- * <p><b>Important:</b> Many values in this file are placeholders (especially CAN IDs and tuning
- * values). They MUST be replaced with real values from the electrical and mechanical teams before
- * deploying to the robot. See {@code plan.md} section 1b for the full list of values needed.
-=======
  * <p><b>Note:</b> CAN IDs and gear ratios reflect real hardware values from the electrical and
  * mechanical teams. Tuning values (voltages, PID gains, speeds) are starting defaults that
  * should be adjusted on the robot. See {@code plan.md} section 1b for details.
->>>>>>> 1e8b5f0cbe7ff02a3f73d7db1f3ca5c62a72c5ff
  */
 public final class Constants {
 
@@ -45,15 +39,9 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-<<<<<<< HEAD
-    // CAN IDs — placeholder values, replace with real IDs from electrical team
-    public static final int kLauncherMotorId = 20;
-    public static final int kFeederMotorId = 21;
-=======
     // CAN IDs
     public static final int kLauncherMotorId = 58;
     public static final int kFeederMotorId = 54;
->>>>>>> 1e8b5f0cbe7ff02a3f73d7db1f3ca5c62a72c5ff
 
     // Voltages — starting points, tune on robot
     public static final double kLauncherVoltage = 10.5;
@@ -67,22 +55,12 @@ public final class Constants {
   }
 
   public static class IntakeConstants {
-<<<<<<< HEAD
-    // CAN IDs — placeholder values, replace with real IDs from electrical team
-    public static final int kArmMotorId = 30;
-    public static final int kRollerMotorId = 31;
-
-    // Arm gear ratio — replace with actual value from mechanical team
-    // This is the reduction between the NEO and the arm pivot (e.g., 100.0 means 100:1)
-    public static final double kArmGearRatio = 100.0;
-=======
     // CAN IDs
     public static final int kArmMotorId = 50;
     public static final int kRollerMotorId = 48;
 
     // Arm gear ratio (20:1 reduction between NEO and arm pivot)
     public static final double kArmGearRatio = 20.0;
->>>>>>> 1e8b5f0cbe7ff02a3f73d7db1f3ca5c62a72c5ff
 
     // Arm positions in degrees (0 = stowed/vertical, positive = deployed)
     public static final double kStowedAngleDegrees = 0.0;
