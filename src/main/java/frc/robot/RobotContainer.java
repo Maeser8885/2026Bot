@@ -52,16 +52,15 @@ public class RobotContainer {
   AHRS navX = new AHRS(NavXComType.kMXP_SPI);
 
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  //TODO uncomment this
-  // private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
 
-    /* TODO UNCOMMENT THIS WHEN SWERVE READY
     configureBindings();
     m_driveSubsystem.setDefaultCommand(m_driveSubsystem.driveDirectAngleFO(
       () -> m_driverController.getRawAxis(0),//LEFT X
@@ -69,7 +68,7 @@ public class RobotContainer {
       () -> m_driverController.getRawAxis(2),//RIGHT X
       () -> -m_driverController.getRawAxis(3)//RIGHT Y
       ));
-      */
+    
   }
 
   /**
