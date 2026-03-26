@@ -43,7 +43,7 @@ Use the REV Hardware Client (plug each Spark Max in via USB) to read or assign C
 - [x] Shooter — launcher motor Spark Max CAN ID: **58**
 - [x] Shooter — feeder motor Spark Max CAN ID: **54**
 - [x] Intake — arm motor Spark Max CAN ID: **50**
-- [x] Intake — roller motor Spark Max CAN ID: **48**
+- [x] Intake — roller motor Spark Max CAN ID: **48**f
 - [x] Confirm all swerve Spark Maxes are set to **brushless mode** (NEO motors) — configured in YAGSL JSON as `sparkmax_neo`
 - [x] Confirm shooter Spark Maxes are set to **brushed mode** (CIM motors)
 - [x] Confirm intake arm Spark Max is set to **brushless mode** (NEO motor)
