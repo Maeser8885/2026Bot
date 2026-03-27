@@ -14,7 +14,7 @@ This document describes the physical robot, its subsystems, controls, autonomous
 - **Scoring**: Score fuel into the Hub (central field structure). Climb the Tower in endgame for bonus points.
 - **Strategy**: Intake fuel from the field (front intake), store in onboard hopper (gravity-fed), shoot out the rear into the Hub
 - **Controls**: 2-driver setup — Driver 1 (drivetrain), Driver 2/Operator (intake + shooter)
-- **Controllers**: 2x Xbox controllers (Port 0 = driver, Port 1 = operator)
+- **Controllers**: 2x Logitech F310 gamepads in X-input mode (Port 0 = driver, Port 1 = operator). **Important:** The switch on the bottom of each F310 must be set to "X" (not "D"). In X-input mode the F310 is Xbox-compatible — same button layout, analog triggers, and WPILib `CommandXboxController` class.
 
 ---
 
@@ -203,7 +203,7 @@ These values need to be found experimentally. Start with the suggested defaults,
 
 ## 3. Controls
 
-### Driver 1 — Drivetrain (Xbox Controller — Port 0)
+### Driver 1 — Drivetrain (Logitech F310 — Port 0)
 
 Drives the robot. Nothing else — focus on positioning.
 
@@ -217,7 +217,7 @@ Drives the robot. Nothing else — focus on positioning.
 
 All other buttons on this controller are unbound. Y button toggles between drive modes — the current mode should be displayed on the dashboard so the driver always knows which mode they're in.
 
-### Driver 2 — Operator (Xbox Controller — Port 1)
+### Driver 2 — Operator (Logitech F310 — Port 1)
 
 Controls intake and shooter. Two triggers — that's it.
 
@@ -292,11 +292,11 @@ Code these in this order. Each builds on the previous:
 - All commands and command sequences
 - `RobotContainer` — both controllers, all bindings, auto chooser
 - `Autos.java` — all autonomous routines
-- `Constants.java` — full structure with all inner classes and placeholder values
+- Constants files — each subsystem has its own constants file (see file structure below)
 - Driver camera setup (`CameraServer.startAutomaticCapture()`)
 
 **Needs real values BEFORE deploying to the robot (but code compiles without them):**
-- Shooter and intake CAN IDs in `Constants.java` — swap placeholders for real IDs from electrical team
+- Shooter and intake CAN IDs in `ShooterConstants.java` / `IntakeConstants.java` — swap placeholders for real IDs from electrical team
 - Swerve CAN IDs, Thrifty encoder analog input channels, encoder offsets, module locations, and gear ratio — all in the YAGSL JSON files under `src/main/deploy/swerve/modules/`
 - Gyro/IMU type — in `swervedrive.json`
 - Starting tuning values (voltages, PID gains, speeds) — use the suggested defaults from section 1b
@@ -313,6 +313,28 @@ private final SparkMax rollerMotor = new SparkMax(
 ```
 
 **Bottom line: Students can write ALL the code today. The robot is only needed for configuration values and tuning.**
+
+### File Structure and Parallel Work
+
+Constants are split into per-subsystem files so multiple students can work in parallel without git merge conflicts. Each student owns their subsystem file and its constants file:
+
+```
+frc/robot/
+  Constants.java                    ← shared only: controller ports, auto constants
+  RobotContainer.java               ← wiring hub (bindings added in distinct blocks per subsystem)
+  TestMode.java                     ← test mode motor-by-motor verification
+  commands/
+    Autos.java                      ← autonomous routines
+  subsystems/
+    DrivetrainSubsystem.java        ← Student A owns this
+    DrivetrainConstants.java        ← Student A owns this
+    ShooterSubsystem.java           ← Student B owns this
+    ShooterConstants.java           ← Student B owns this
+    IntakeSubsystem.java            ← Student C owns this
+    IntakeConstants.java            ← Student C owns this
+```
+
+**Why this layout?** Each student edits different files — no merge conflicts. The global `Constants.java` is small and stable (just controller ports and auto settings). `RobotContainer.java` is the only shared file, but bindings are added in clearly separated blocks (driver section, shooter section, intake section) so conflicts are rare and easy to resolve.
 
 ### Important: REVLib 2026 API Changes
 
@@ -366,12 +388,12 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
 
 ### 5.1 Drivetrain
 
-- [ ] **Constants**: Define in `Constants.java` (inner class `DrivetrainConstants`)
+- [ ] **Constants**: Define in `subsystems/DrivetrainConstants.java`
   - Drive speed limits (max translational m/s, max rotational rad/s)
   - Slow mode multiplier
   - Deadband values for joystick input
   - Field-oriented default (should be `true` — field-oriented on startup)
-  - **Note**: Swerve CAN IDs, encoder channels, and gyro config do NOT go in `Constants.java` — they go in the YAGSL JSON config files (see below). YAGSL reads its configuration entirely from JSON.
+  - **Note**: Swerve CAN IDs, encoder channels, and gyro config do NOT go in constants files — they go in the YAGSL JSON config files (see below). YAGSL reads its configuration entirely from JSON.
 
 - [ ] **YAGSL JSON config**: Fill in `src/main/deploy/swerve/` files
   - `swervedrive.json` — confirm IMU type
@@ -433,7 +455,7 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
 
 ### 5.2 Shooter
 
-- [ ] **Constants**: Define in `Constants.java` (inner class `ShooterConstants`)
+- [ ] **Constants**: Define in `subsystems/ShooterConstants.java`
   - Launcher motor CAN ID
   - Feeder motor CAN ID
   - Launcher voltage (starting point: ~10.5V)
@@ -463,7 +485,7 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
 
 ### 5.3 Intake
 
-- [ ] **Constants**: Define in `Constants.java` (inner class `IntakeConstants`)
+- [ ] **Constants**: Define in `subsystems/IntakeConstants.java`
   - Arm motor CAN ID
   - Roller motor CAN ID
   - Arm gear ratio (needed to convert encoder rotations → arm degrees)
@@ -513,7 +535,7 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
 
 ### 5.4 Autonomous
 
-- [ ] **Constants**: Define in `Constants.java` (inner class `AutoConstants`)
+- [ ] **Constants**: Define in `Constants.java` → `AutoConstants` (stays in the shared file since auto uses both drivetrain and shooter)
   - Auto drive speed (moderate — don't go full speed in auto)
   - Auto drive duration (seconds to drive forward — tune on the actual field)
 
@@ -535,7 +557,7 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
 - [ ] **Clean up template code**: Remove `ExampleSubsystem`, `ExampleSubsystemSkeleton`, `ExampleCommand`, and the example auto from `Autos.java` once real subsystems are in place
 
 - [ ] **Add operator controller in `RobotContainer.java`**:
-  - Create a second `CommandXboxController` for the operator on **port 1**
+  - Create a second controller for the operator on **port 1** (Logitech F310 in X-input mode — use `CommandXboxController`)
   - Add `kOperatorControllerPort = 1` to `Constants.OperatorConstants`
   - All mechanism bindings (intake, shooter) go on this controller
   - The existing driver controller on port 0 is only for drivetrain

@@ -7,8 +7,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Constants.DrivetrainConstants;
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.subsystems.DrivetrainConstants;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -23,8 +23,8 @@ import frc.robot.subsystems.ShooterSubsystem;
  * <ul>
  *   <li><b>Creating subsystems</b> — each physical mechanism (drivetrain, shooter, intake) is
  *       instantiated here as a subsystem object</li>
- *   <li><b>Creating controllers</b> — the Xbox controllers that drivers use are set up here
- *       (driver on port 0, operator on port 1)</li>
+ *   <li><b>Creating controllers</b> — the Logitech F310 gamepads that drivers use are set up
+ *       here (driver on port 0, operator on port 1). F310 in X-input mode is Xbox-compatible.</li>
  *   <li><b>Binding buttons to commands</b> — this is where you define "when the operator holds
  *       the right trigger, run the shooter." Each button/trigger is connected to a command.</li>
  *   <li><b>Setting up autonomous</b> — the auto chooser lets the drive team select which
@@ -45,10 +45,11 @@ public class RobotContainer {
   private final IntakeSubsystem intake = new IntakeSubsystem();
 
   // --- Controllers ---
-  // We use two Xbox controllers: one for the driver (movement) and one for the operator (mechanisms).
+  // We use two Logitech F310 gamepads (in X-input mode, which is Xbox-compatible).
   // CommandXboxController is the command-based wrapper — it gives you Trigger objects for each
   // button so you can attach commands with .onTrue(), .whileTrue(), etc.
   // Port numbers must match how the controllers are plugged into the Driver Station laptop.
+  // IMPORTANT: The switch on the bottom of each F310 must be set to "X" (not "D").
   private final CommandXboxController driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);   // Port 0
   private final CommandXboxController operatorController =

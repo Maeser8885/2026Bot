@@ -11,7 +11,7 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.IntakeConstants;
+import frc.robot.subsystems.IntakeConstants;
 
 /**
  * IntakeSubsystem controls the front-mounted over-the-bumper intake. Physically, it consists of:
