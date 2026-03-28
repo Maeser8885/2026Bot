@@ -27,7 +27,11 @@ import edu.wpi.first.wpilibj.AnalogEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.ScheduleCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -114,6 +118,7 @@ public class RobotContainer {
 
 
   public void teleopInit(){
+    CommandScheduler.getInstance().schedule(m_ShooterSubsystem.stop());
     m_driveSubsystem.setDefaultCommand(driveChooser.getSelected());
   }
 
@@ -144,7 +149,11 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
     // return autoChooser.getSelected();
-    return new RunCommand(() -> {}, m_driveSubsystem);
+    return new SequentialCommandGroup(
+      m_ShooterSubsystem.spinUpAndShoot()
+      ,new WaitCommand(10),
+      m_ShooterSubsystem.stop()
+    );
   }
 
   public void debugPeriodic(){
