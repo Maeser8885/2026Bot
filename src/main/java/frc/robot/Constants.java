@@ -7,6 +7,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.*;
 
+import org.ejml.equation.IntegerSequence.Range;
+
 import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.Time;
 
@@ -21,28 +23,32 @@ import edu.wpi.first.units.measure.Time;
 public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
+    public static final int kOperatorControllerPort = 1;
   }
 
   public static class DriveConstants {
-    public static LinearVelocity maxSpeed = FeetPerSecond.of(3);
+    public static LinearVelocity maxSpeed = FeetPerSecond.of(8);
   }
 
   public static class ShooterConstants {
     //CAN IDs
-    public static int shooterCANId = 0; //TODO: Change these ports
-    public static int feederCANId = 0;
-
-    public static int shooterPort = 0;
-    public static int FeederPort = 0;
+    public static final int shooterCANId = 58; //TODO: Change these ports
+    public static final int feederCANId = 51;
 
     //Speeds
-    public static final double feederMaxSpeed = 0;
-    public static final double shooterMaxSpeed = 0;
-    public static final Time shootToFeedDelay = Seconds.of(1);
+    public static final double feederMaxSpeed = 1;
+    public static final double shooterMaxSpeed = 1;
+    public static final Time shootToFeedDelay = Seconds.of(0.5);
   }
 
   public static class VisionConstants {
     public static String limelightName = "";
+
+    public static double forwardOffset = 13;
+    public static double upwardOffset = 6.75;
+    public static double rightOffset = 0;
+
+    public static int[] idFiltersOverride = {1, 2, 3, 4,5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};//TODO ABSOLUTELY FIX THIS!!!!!!!
   }
 
   public static class IntakeConstants {
@@ -54,15 +60,15 @@ public final class Constants {
     public static final double kArmGearRatio = 20.0;
 
     // Arm positions in degrees (0 = stowed/vertical, positive = deployed)
-    public static final double kStowedAngleDegrees = 0.0;
-    public static final double kDeployedAngleDegrees = 90.0;
+    public static final double kStowedSetpoint = 0.0;
+    public static final double kDeployedSetpoint = -5.4;
 
     // Soft limits — prevent arm from going past physical range
-    public static final float kForwardSoftLimit = 120.0f;
-    public static final float kReverseSoftLimit = -5.0f;
+    public static final float kForwardSoftLimit = 2.0f;
+    public static final float kReverseSoftLimit = -7.0f;
 
     // Arm PID gains — start with P only, add D if it oscillates
-    public static final double kArmP = 0.02;
+    public static final double kArmP = 0.05;
     public static final double kArmI = 0.0;
     public static final double kArmD = 0.0;
 
@@ -71,7 +77,7 @@ public final class Constants {
     public static final double kArmMinOutput = -0.4;
 
     // Roller speed (percent output, 0.0 to 1.0)
-    public static final double kRollerSpeed = 0.7;
+    public static final double kRollerSpeed = 0.4;
 
     // Current limits
     public static final int kArmCurrentLimit = 40;

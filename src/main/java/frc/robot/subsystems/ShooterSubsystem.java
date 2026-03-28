@@ -20,8 +20,8 @@ public class ShooterSubsystem extends SubsystemBase {
 
 
   public ShooterSubsystem() {
-    shooterMotor = new SparkMax(ShooterConstants.shooterCANId, MotorType.kBrushless);
-    feederMotor = new SparkMax(ShooterConstants.feederCANId, MotorType.kBrushless);
+    shooterMotor = new SparkMax(ShooterConstants.shooterCANId, MotorType.kBrushed);
+    feederMotor = new SparkMax(ShooterConstants.feederCANId, MotorType.kBrushed);
   }
 
   /**
@@ -35,23 +35,23 @@ public class ShooterSubsystem extends SubsystemBase {
   public Command shootAndFeed(){
     return runOnce(() -> {
       //Start both motors
-      shooterMotor.set(ShooterConstants.shooterMaxSpeed);
-      feederMotor.set(ShooterConstants.feederMaxSpeed);
+      shooterMotor.set(-ShooterConstants.shooterMaxSpeed);
+      feederMotor.set(-ShooterConstants.feederMaxSpeed);
     });
   }
 
   public Command unfeed() {
     return runOnce(() -> {
       //Start both motors
-      shooterMotor.set(-ShooterConstants.shooterMaxSpeed);
-      feederMotor.set(-ShooterConstants.feederMaxSpeed);
+      shooterMotor.set(ShooterConstants.shooterMaxSpeed);
+      feederMotor.set(ShooterConstants.feederMaxSpeed);
     });
   }
 
   public Command spinUpAndShoot(){
     return new SequentialCommandGroup(
       //Start Shooter motor
-      runOnce(() -> shooterMotor.set(ShooterConstants.shooterMaxSpeed)),
+      runOnce(() -> shooterMotor.set(-ShooterConstants.shooterMaxSpeed)),
       //Wait for Delay time defined in constants
       new WaitCommand(ShooterConstants.shootToFeedDelay),
       //Start Feeder motor
@@ -62,6 +62,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
   public Command stop(){
     return run(() -> {
+      getCurrentCommand().cancel();
       shooterMotor.set(0);
       feederMotor.set(0);
     });

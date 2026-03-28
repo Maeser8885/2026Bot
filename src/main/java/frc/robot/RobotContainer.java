@@ -9,16 +9,25 @@ import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
 import frc.robot.subsystems.DriveSubsystem;
 import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.ShooterSubsystem;
+import frc.robot.subsystems.VisionSubsystem;
+import swervelib.SwerveDrive;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.studica.frc.AHRS;
 import com.studica.frc.AHRS.NavXComType;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.AnalogEncoder;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
@@ -31,44 +40,81 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
 
-  //TODO UNCOMMENT THIS
-  //DriveSubsystem m_driveSubsystem = new DriveSubsystem();
 
-  AnalogEncoder frEncoder = new AnalogEncoder(2);
-  AnalogEncoder flEncoder = new AnalogEncoder(1);
-  AnalogEncoder brEncoder = new AnalogEncoder(3);
-  AnalogEncoder blEncoder = new AnalogEncoder(0);
-
-  SparkMax frdMotor = new SparkMax(55, MotorType.kBrushless);
-  SparkMax fldMotor = new SparkMax(57, MotorType.kBrushless);
-  SparkMax brdMotor = new SparkMax(53, MotorType.kBrushless);
-  SparkMax bldMotor = new SparkMax(62, MotorType.kBrushless);
-
-  SparkMax frtMotor = new SparkMax(56, MotorType.kBrushless);
-  SparkMax fltMotor = new SparkMax(49, MotorType.kBrushless);
-  SparkMax brtMotor = new SparkMax(60, MotorType.kBrushless);
-  SparkMax bltMotor = new SparkMax(59, MotorType.kBrushless);
 
   AHRS navX = new AHRS(NavXComType.kMXP_SPI);
 
+  SendableChooser<Command> driveChooser = new SendableChooser<Command>();
+  // SendableChooser<Command> autoChooser = new SendableChooser<Command>();
+
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
+  private final VisionSubsystem m_visionSubsystem = new VisionSubsystem();
+  private final ShooterSubsystem m_ShooterSubsystem = new ShooterSubsystem();
+  private final IntakeSubsystem m_IntakeSubsystem = new IntakeSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  private final CommandXboxController m_operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
+    m_visionSubsystem.setDefaultCommand(m_visionSubsystem.visionUpkeep(m_driveSubsystem));
+
+    
+
+    // NamedCommands.registerCommand("shoot", m_ShooterSubsystem.shootAndFeed());
+    // NamedCommands.registerCommand("extendIntake", m_IntakeSubsystem.deploy());
+    // NamedCommands.registerCommand("intake", m_IntakeSubsystem.runRollers());
+    // NamedCommands.registerCommand("stopIntake", m_IntakeSubsystem.stop());
+    // NamedCommands.registerCommand("stopShooting", m_ShooterSubsystem.stop());
+    // NamedCommands.registerCommand("setAngleRightClockwise", m_driveSubsystem.setAngleOffset(90));
+    
+    // autoChooser = AutoBuilder.buildAutoChooser();
+    // SmartDashboard.putData(autoChooser);
 
     configureBindings();
-    m_driveSubsystem.setDefaultCommand(m_driveSubsystem.driveDirectAngleFO(
-      () -> m_driverController.getRawAxis(0),//LEFT X
-      () -> -m_driverController.getRawAxis(1),//LEFT Y
-      () -> m_driverController.getRawAxis(2),//RIGHT X
-      () -> -m_driverController.getRawAxis(3)//RIGHT Y
-      ));
-    
+
+    configureDrive();
+  }
+
+  public void configureDrive(){
+    driveChooser.addOption("Robot Oriented", m_driveSubsystem.driveAngularVelocity(
+      () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), 0.1),
+       () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
+        () -> MathUtil.applyDeadband(m_driverController.getRightX(), 0.1)));
+
+    driveChooser.addOption("Angular Field Oriented", m_driveSubsystem.driveAngularVelocityFO(
+      () -> MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1),
+       () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
+        () -> MathUtil.applyDeadband(m_driverController.getRightX(), 0.1)));
+
+    driveChooser.setDefaultOption("Field Oriented Direct Angle", m_driveSubsystem.driveDirectAngleFO(
+      () -> MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1),
+       () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
+        () -> MathUtil.applyDeadband(m_driverController.getRightX(), 0.1),
+        () -> -MathUtil.applyDeadband(m_driverController.getRightY(), 0.1)));
+
+        SmartDashboard.putData(driveChooser);
+
+        m_driverController.a().toggleOnTrue(m_driveSubsystem.zeroYaw());
+
+         m_operatorController.povUp().toggleOnTrue(m_IntakeSubsystem.deploy()); // intake extend
+         m_operatorController.povDown().toggleOnTrue(m_IntakeSubsystem.stow());
+         m_operatorController.b().toggleOnTrue(m_IntakeSubsystem.runRollers()); //run intake
+         m_operatorController.x().toggleOnTrue(m_IntakeSubsystem.runRollersReverse()); //run intake reverse
+         m_operatorController.b().or(m_operatorController.x()).toggleOnFalse(m_IntakeSubsystem.stopRollers()); //run intake
+        m_operatorController.leftTrigger().toggleOnTrue(m_ShooterSubsystem.shootAndFeed()); // Shoot both full speed
+        m_operatorController.rightTrigger().toggleOnTrue(m_ShooterSubsystem.spinUpAndShoot()); // Spin up and shoot
+        m_operatorController.rightTrigger().or(m_operatorController.leftTrigger()).toggleOnFalse(m_ShooterSubsystem.stop());
+
+
+  }
+
+
+  public void teleopInit(){
+    m_driveSubsystem.setDefaultCommand(driveChooser.getSelected());
   }
 
   /**
@@ -97,26 +143,14 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    // return autoChooser.getSelected();
+    return new RunCommand(() -> {}, m_driveSubsystem);
   }
 
   public void debugPeriodic(){
-    SmartDashboard.putNumber("FREncoder ABSOLUTE", frEncoder.get());
-    SmartDashboard.putNumber("FLEncoder ABSOLUTE", flEncoder.get());
-    SmartDashboard.putNumber("BREncoder ABSOLUTE", brEncoder.get());
-    SmartDashboard.putNumber("BLEncoder ABSOLUTE", blEncoder.get());
-
-    SmartDashboard.putNumber("FRD REL ENCODER", frdMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("FLD REL ENCODER", fldMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("BRD REL ENCODER", brdMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("BLD REL ENCODER", bldMotor.getEncoder().getPosition());
-
-    SmartDashboard.putNumber("FRT REL ENCODER", frtMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("FLT REL ENCODER", fltMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("BRT REL ENCODER", brtMotor.getEncoder().getPosition());
-    SmartDashboard.putNumber("BLT REL ENCODER", bltMotor.getEncoder().getPosition());
-
     SmartDashboard.putNumber("NAVX YAW", navX.getYaw());
 
+    SmartDashboard.putNumber("ARM SETPOINT", m_IntakeSubsystem.getSetpoint());
+    SmartDashboard.putNumber("ARM POSITION", m_IntakeSubsystem.getArmAngle());
   }
 }
