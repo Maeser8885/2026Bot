@@ -85,7 +85,7 @@ public class RobotContainer {
 
   public void configureDrive(){
     driveChooser.addOption("Robot Oriented", m_driveSubsystem.driveAngularVelocity(
-      () -> MathUtil.applyDeadband(-m_driverController.getLeftX(), 0.1),
+      () -> MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1),
        () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
         () -> MathUtil.applyDeadband(m_driverController.getRightX(), 0.1)));
 

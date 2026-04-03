@@ -134,7 +134,7 @@ public class DriveSubsystem extends SubsystemBase {
       swerveDrive.drive(new Translation2d(yInput.getAsDouble() * swerveDrive.getMaximumChassisVelocity(),
                                           -xInput.getAsDouble() * swerveDrive.getMaximumChassisVelocity()),
                         thetaInput.getAsDouble() * swerveDrive.getMaximumChassisAngularVelocity(), 
-                        true,
+                        false,
                         false);
     });
 
