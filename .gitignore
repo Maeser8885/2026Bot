@@ -165,8 +165,12 @@ bin/
 .idea/
 out/
 
+
 # Fleet
 .fleet
+
+# Claude
+.claude/
 
 # Simulation GUI and other tools window save file
 networktables.json
