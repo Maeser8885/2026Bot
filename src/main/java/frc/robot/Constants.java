@@ -37,7 +37,7 @@ public final class Constants {
 
     //Speeds
     public static final double feederMaxSpeed = 1;
-    public static final double shooterMaxSpeed = 1;
+    public static final double shooterMaxSpeed = 0.6;
     public static final Time shootToFeedDelay = Seconds.of(0.5);
   }
 

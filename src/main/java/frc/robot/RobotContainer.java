@@ -52,19 +52,19 @@ public class RobotContainer {
   // SendableChooser<Command> autoChooser = new SendableChooser<Command>();
 
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
-  private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
+  //private final DriveSubsystem m_driveSubsystem = new DriveSubsystem();
   private final VisionSubsystem m_visionSubsystem = new VisionSubsystem();
   private final ShooterSubsystem m_ShooterSubsystem = new ShooterSubsystem();
-  private final IntakeSubsystem m_IntakeSubsystem = new IntakeSubsystem();
+  //private final IntakeSubsystem m_IntakeSubsystem = new IntakeSubsystem();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
+  // private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
   private final CommandXboxController m_operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
-    m_visionSubsystem.setDefaultCommand(m_visionSubsystem.visionUpkeep(m_driveSubsystem));
+    // m_visionSubsystem.setDefaultCommand(m_visionSubsystem.visionUpkeep(m_driveSubsystem)); TODO UNCOMMENT ALL OF THIS
 
     
 
@@ -84,6 +84,7 @@ public class RobotContainer {
   }
 
   public void configureDrive(){
+    /*
     driveChooser.addOption("Robot Oriented", m_driveSubsystem.driveAngularVelocity(
       () -> MathUtil.applyDeadband(m_driverController.getLeftX(), 0.1),
        () -> -MathUtil.applyDeadband(m_driverController.getLeftY(), 0.1),
@@ -101,17 +102,22 @@ public class RobotContainer {
         () -> -MathUtil.applyDeadband(m_driverController.getRightY(), 0.1)));
 
         SmartDashboard.putData(driveChooser);
+        
 
         m_driverController.a().toggleOnTrue(m_driveSubsystem.zeroYaw());
-
+        */
+        /*
          m_operatorController.povUp().toggleOnTrue(m_IntakeSubsystem.deploy()); // intake extend
          m_operatorController.povDown().toggleOnTrue(m_IntakeSubsystem.stow());
          m_operatorController.b().toggleOnTrue(m_IntakeSubsystem.runRollers()); //run intake
          m_operatorController.x().toggleOnTrue(m_IntakeSubsystem.runRollersReverse()); //run intake reverse
-         m_operatorController.b().or(m_operatorController.x()).toggleOnFalse(m_IntakeSubsystem.stopRollers()); //run intake
+         */
+        // m_operatorController.b().or(m_operatorController.x()).toggleOnFalse(m_IntakeSubsystem.stopRollers()); //run intake
+
+        m_operatorController.a().toggleOnTrue(m_ShooterSubsystem.unfeed());
         m_operatorController.leftTrigger().toggleOnTrue(m_ShooterSubsystem.shootAndFeed()); // Shoot both full speed
         m_operatorController.rightTrigger().toggleOnTrue(m_ShooterSubsystem.spinUpAndShoot()); // Spin up and shoot
-        m_operatorController.rightTrigger().or(m_operatorController.leftTrigger()).toggleOnFalse(m_ShooterSubsystem.stop());
+        m_operatorController.rightTrigger().or(m_operatorController.leftTrigger()).or(m_operatorController.a()).toggleOnFalse(m_ShooterSubsystem.stop());
 
 
   }
@@ -119,7 +125,8 @@ public class RobotContainer {
 
   public void teleopInit(){
     CommandScheduler.getInstance().schedule(m_ShooterSubsystem.stop());
-    m_driveSubsystem.setDefaultCommand(driveChooser.getSelected());
+
+    //m_driveSubsystem.setDefaultCommand(driveChooser.getSelected()); TODO UNCOMMENT WHEN DRIVE
   }
 
   /**
@@ -159,7 +166,7 @@ public class RobotContainer {
   public void debugPeriodic(){
     SmartDashboard.putNumber("NAVX YAW", navX.getYaw());
 
-    SmartDashboard.putNumber("ARM SETPOINT", m_IntakeSubsystem.getSetpoint());
-    SmartDashboard.putNumber("ARM POSITION", m_IntakeSubsystem.getArmAngle());
+    // SmartDashboard.putNumber("ARM SETPOINT", m_IntakeSubsystem.getSetpoint());
+    // SmartDashboard.putNumber("ARM POSITION", m_IntakeSubsystem.getArmAngle());
   }
 }
