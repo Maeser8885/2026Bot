@@ -1,9 +1,13 @@
 package frc.robot.subsystems;
 
+import java.util.function.Supplier;
+
 import com.revrobotics.RelativeEncoder;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
+import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -49,6 +53,10 @@ public class IntakeSubsystem extends SubsystemBase {
   private final RelativeEncoder armEncoder;
   private final SparkClosedLoopController armController;
 
+  ClosedLoopSlot currentSlot = ClosedLoopSlot.kSlot0; // Start in stowed slot by default
+
+  SparkMaxConfig armConfigSaved;
+
   public IntakeSubsystem() {
     // Arm motor — NEO (brushless), geared for torque
     armMotor = new SparkMax(IntakeConstants.kArmMotorId, MotorType.kBrushless);
@@ -63,15 +71,28 @@ public class IntakeSubsystem extends SubsystemBase {
     armConfig
         .smartCurrentLimit(IntakeConstants.kArmCurrentLimit)
         .idleMode(IdleMode.kBrake)
-        .inverted(false); // TODO: Test on robot — invert if arm deploys wrong direction
+        .inverted(true); // TODO: Test on robot — invert if arm deploys wrong direction
 
 
+
+    
+         // Convert from rotations to radians
     // PID for position control with output capped for compliance
     armConfig.closedLoop
-        .p(IntakeConstants.kArmP)
-        .i(IntakeConstants.kArmI)
-        .d(IntakeConstants.kArmD)
-        .outputRange(IntakeConstants.kArmMinOutput, IntakeConstants.kArmMaxOutput);
+        // UP: SLOT 0, DOWN SLOT 1, HOLD SLOT 2
+        .p(IntakeConstants.kArmUP, ClosedLoopSlot.kSlot0)
+        .i(IntakeConstants.kArmUI, ClosedLoopSlot.kSlot0)
+        .d(IntakeConstants.kArmUD, ClosedLoopSlot.kSlot0)
+        .p(IntakeConstants.kArmDP, ClosedLoopSlot.kSlot1)
+        .i(IntakeConstants.kArmDI, ClosedLoopSlot.kSlot1)
+        .d(IntakeConstants.kArmDD, ClosedLoopSlot.kSlot1)
+        .p(IntakeConstants.kArmHoldP, ClosedLoopSlot.kSlot2)
+        .i(IntakeConstants.kArmHoldI, ClosedLoopSlot.kSlot2)
+        .d(IntakeConstants.kArmHoldD, ClosedLoopSlot.kSlot2)
+        .outputRange(IntakeConstants.kArmMinOutput, IntakeConstants.kArmMaxOutput)
+        .feedForward.kG(IntakeConstants.kArmG);
+
+      
 
     // Software soft limits — hardware-level protection
     armConfig.softLimit
@@ -80,6 +101,7 @@ public class IntakeSubsystem extends SubsystemBase {
         .reverseSoftLimitEnabled(true)
         .reverseSoftLimit(IntakeConstants.kReverseSoftLimit);
 
+        armConfigSaved = armConfig;
     armMotor.configure(armConfig,
         com.revrobotics.ResetMode.kResetSafeParameters,
         com.revrobotics.PersistMode.kPersistParameters);
@@ -102,12 +124,27 @@ public class IntakeSubsystem extends SubsystemBase {
     armEncoder.setPosition(IntakeConstants.kStowedSetpoint);
   }
 
+  private double gravityFeedforwardForAngle(double angle) {
+    // If angle==0 is vertical (stowed) and positive is deployed (down), gravity torque ∝ sin(angle).
+    return IntakeConstants.kArmG * Math.sin(angle); 
+  }
+
   public Command deploy() {
-    return run(() -> armController.setSetpoint(IntakeConstants.kDeployedSetpoint, ControlType.kPosition));
+    return run(() -> {
+     double target = IntakeConstants.kDeployedSetpoint;
+     currentSlot = ClosedLoopSlot.kSlot1;
+      double ff = gravityFeedforwardForAngle(armMotor.getEncoder().getPosition());
+      armController.setSetpoint(target, ControlType.kPosition, currentSlot, ff);
+    });
   }
 
   public Command stow() {
-    return run(() -> armController.setSetpoint(IntakeConstants.kStowedSetpoint, ControlType.kPosition));
+    return run(() -> {
+     double target = IntakeConstants.kStowedSetpoint;
+     currentSlot = ClosedLoopSlot.kSlot0;
+      double ff = gravityFeedforwardForAngle(armMotor.getEncoder().getPosition());
+      armController.setSetpoint(target, ControlType.kPosition, currentSlot, ff);
+    });
   }
 
   public Command runRollers() {
@@ -153,12 +190,29 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    
+    
+      double ff = gravityFeedforwardForAngle(armMotor.getEncoder().getPosition());
+      armController.setSetpoint(armController.getSetpoint(), ControlType.kPosition, currentSlot, ff);
+
+      if(currentSlot == ClosedLoopSlot.kSlot1 && Math.abs(armController.getSetpoint() - getArmAngle()) < IntakeConstants.kArmHoldThreshold) {
+        currentSlot = ClosedLoopSlot.kSlot2;
+      } else if (currentSlot == ClosedLoopSlot.kSlot2 && Math.abs(armController.getSetpoint() - getArmAngle()) >= IntakeConstants.kArmHoldThreshold) {
+        currentSlot = ClosedLoopSlot.kSlot1;
+      }
+
+    SmartDashboard.putNumber("Intake/Arm Setpoint", armController.getSetpoint());
+    SmartDashboard.putNumber("Intake/Arm Slot", currentSlot.value);
+    
+    SmartDashboard.putNumber("arm output", armMotor.getAppliedOutput());
     SmartDashboard.putNumber("Intake/Arm Angle", getArmAngle());
     SmartDashboard.putNumber("Intake/Roller Output", rollerMotor.getAppliedOutput());
     SmartDashboard.putBoolean("Intake/Arm Deployed",
         isAtPosition(IntakeConstants.kDeployedSetpoint));
     SmartDashboard.putBoolean("Intake/Arm Stowed",
         isAtPosition(IntakeConstants.kStowedSetpoint));
+
+        
   }
 
   public double getSetpoint() {

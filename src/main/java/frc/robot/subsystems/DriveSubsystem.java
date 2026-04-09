@@ -15,17 +15,20 @@ import com.pathplanner.lib.config.ModuleConfig;
 import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.util.DriveFeedforwards;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
@@ -38,6 +41,7 @@ import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 public class DriveSubsystem extends SubsystemBase {
 
   SwerveDrive swerveDrive;
+  
 
   /* Constructor yippee!! */ 
   public DriveSubsystem() {
@@ -47,10 +51,10 @@ public class DriveSubsystem extends SubsystemBase {
       config = RobotConfig.fromGUISettings();
 
       AutoBuilder.configure(
-            () ->swerveDrive.getPose(), // Robot pose supplier
-            (Pose2d pose) -> swerveDrive.resetOdometry(pose), // Method to reset odometry (will be called if your auto has a starting pose)
-            () -> swerveDrive.getRobotVelocity(), // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
-            (speeds, feedforwards) -> swerveDrive.drive(speeds), // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
+            this::getPose, // Robot pose supplier
+            this::resetOdometry, // Method to reset odometry (will be called if your auto has a starting pose)
+            this::getRobotVelocity, // ChassisSpeeds supplier. MUST BE ROBOT RELATIVE
+            this::driveRobotRelative, // Method that will drive the robot given ROBOT RELATIVE ChassisSpeeds. Also optionally outputs individual module feedforwards
             new PPHolonomicDriveController( // PPHolonomicController is the built in path following controller for holonomic drive trains
                     new PIDConstants(5.0, 0.0, 0.0), // Translation PID constants
                     new PIDConstants(5.0, 0.0, 0.0) // Rotation PID constants
@@ -72,6 +76,7 @@ public class DriveSubsystem extends SubsystemBase {
     } catch (Exception e) {
       // Handle exception as needed
       e.printStackTrace();
+      Commands.print("Auto config bad :/");
     }
 
     
@@ -94,12 +99,39 @@ public class DriveSubsystem extends SubsystemBase {
     SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
   }
 
+  public Pose2d getPose() {
+      return swerveDrive.getPose();
+    }
+
+  public void resetOdometry(Pose2d pose) {
+    swerveDrive.resetOdometry(pose);
+  }
+
+  public ChassisSpeeds getRobotVelocity() {
+    return swerveDrive.getRobotVelocity();
+  }
+
+  public void driveRobotRelative(ChassisSpeeds speeds, DriveFeedforwards feedforwards) {
+    swerveDrive.drive(speeds);
+  }
+
   /**
    * 
    * @return a command that does an action
    */
   public Command exampleMethodCommand() {
     return runOnce(() -> {});
+  }
+
+  public void updateOdometry() {
+    swerveDrive.updateOdometry();
+  }
+
+  public void setDefaultCommandWithVision(Command command, VisionSubsystem visionSubsystem) {
+    setDefaultCommand(run(() -> {
+      command.execute();
+      visionUpdate(visionSubsystem.getPoseEstimate());
+    }));
   }
 
   public void visionUpdate(LimelightHelpers.PoseEstimate poseEstimate) {
@@ -111,8 +143,6 @@ public class DriveSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     swerveDrive.updateOdometry();
-
-    swerveDrive.swerveDrivePoseEstimator.addVisionMeasurement(null, 0);
   }
 
   public Command zeroYaw(){

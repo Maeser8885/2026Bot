@@ -42,13 +42,18 @@ public final class Constants {
   }
 
   public static class VisionConstants {
-    public static String limelightName = "";
+    public static final String limelightName = "";
 
-    public static double forwardOffset = 13;
-    public static double upwardOffset = 6.75;
-    public static double rightOffset = 0;
+    //inches
+    public static final double forwardOffset = 7.5;
+    public static final double upwardOffset = 16.75;
+    public static final double rightOffset = 11;
 
-    public static int[] idFiltersOverride = {1, 2, 3, 4,5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};//TODO ABSOLUTELY FIX THIS!!!!!!!
+    public static final double pitch = 0;
+    public static final double yaw = 0;
+    public static final double roll = 90;
+
+    public static int[] idFiltersOverride = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32};//TODO ABSOLUTELY FIX THIS!!!!!!!
   }
 
   public static class IntakeConstants {
@@ -61,20 +66,31 @@ public final class Constants {
 
     // Arm positions in degrees (0 = stowed/vertical, positive = deployed)
     public static final double kStowedSetpoint = 0.0;
-    public static final double kDeployedSetpoint = -5.4;
+    public static final double kDeployedSetpoint = -3.5;
 
     // Soft limits — prevent arm from going past physical range
     public static final float kForwardSoftLimit = 2.0f;
-    public static final float kReverseSoftLimit = -7.0f;
+    public static final float kReverseSoftLimit = -4.0f;
 
     // Arm PID gains — start with P only, add D if it oscillates
-    public static final double kArmP = 0.05;
-    public static final double kArmI = 0.0;
-    public static final double kArmD = 0.0;
+    public static final double kArmDP = 0.25;
+    public static final double kArmDI = 0.0;
+    public static final double kArmDD = 0.05;
 
+    public static final double kArmHoldP = 1.5;
+    public static final double kArmHoldI = 0.0;
+    public static final double kArmHoldD = 0.0;
+
+    public static final double kArmHoldThreshold = 0.5;
+
+    public static final double kArmUP = 0.7;
+    public static final double kArmUI = 0.0; 
+    public static final double kArmUD = 0.0;
+
+    public static final double kArmG = 1.5;
     // Arm PID output cap — limits max force for compliance
-    public static final double kArmMaxOutput = 0.4;
-    public static final double kArmMinOutput = -0.4;
+    public static final double kArmMaxOutput = 0.1;
+    public static final double kArmMinOutput = -0.6;
 
     // Roller speed (percent output, 0.0 to 1.0)
     public static final double kRollerSpeed = 0.4;
