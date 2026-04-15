@@ -16,10 +16,10 @@ public final class IntakeConstants {
 
   // Arm positions in degrees (0 = stowed/vertical, positive = deployed)
   public static final double kStowedAngleDegrees = 0.0;
-  public static final double kDeployedAngleDegrees = 115.0;
+  public static final double kDeployedAngleDegrees = 90.0;
 
   // Soft limits — prevent arm from going past physical range
-  public static final float kForwardSoftLimit = 120.0f;
+  public static final float kForwardSoftLimit = 100.0f;
   public static final float kReverseSoftLimit = -5.0f;
 
   // Arm PID gains — start with P only, add D if it oscillates
