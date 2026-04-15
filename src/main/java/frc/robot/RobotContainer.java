@@ -12,6 +12,8 @@ import frc.robot.subsystems.DrivetrainConstants;
 import frc.robot.commands.Autos;
 import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.IntakeSparkMaxPid;
+import frc.robot.subsystems.IntakeRoboRioPid;
 import frc.robot.subsystems.ShooterSubsystem;
 
 /**
@@ -42,7 +44,15 @@ public class RobotContainer {
   // They are created here so that RobotContainer can wire them to controllers and commands.
   private final DrivetrainSubsystem drivetrain = new DrivetrainSubsystem();
   private final ShooterSubsystem shooter = new ShooterSubsystem();
-  private final IntakeSubsystem intake = new IntakeSubsystem();
+
+  // Intake uses a Java interface — IntakeSubsystem defines WHAT the intake can do,
+  // and we pick HOW it does it based on Constants.kUseRoboRioPid:
+  //   false → IntakeSparkMaxPid  (simple onboard PID)
+  //   true  → IntakeRoboRioPid   (gravity feedforward + asymmetric compliance)
+  // The rest of this file doesn't care which one — it just calls intake.deploy(), etc.
+  private final IntakeSubsystem intake = Constants.kUseRoboRioPid
+      ? new IntakeRoboRioPid()
+      : new IntakeSparkMaxPid();
 
   // --- Controllers ---
   // We use two Logitech F310 gamepads (in X-input mode, which is Xbox-compatible).

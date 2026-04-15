@@ -194,7 +194,12 @@ These values need to be found experimentally. Start with the suggested defaults,
 - **Deploy**: Arm motor rotates arms from stowed (0°) to deployed (~115°) using PID position control.
 - **Stow**: Arm motor rotates arms back from deployed to stowed.
 - **Intake**: With arms deployed, roller motor spins to grab fuel off the ground. Rollers pull fuel up over the bumper and into the storage area.
-- **Position hold with compliance**: While intaking, the arm holds its deployed position via PID, but needs to allow slight upward "give" when fuel pushes against the rollers as it enters. This can be achieved by capping the PID output (limiting the maximum downward force the motor applies), so the arm is firm enough to stay near the ground but soft enough that a fuel ball can push it up slightly as it passes through. Alternatively, a lower P gain or a current-limit approach can achieve this.
+- **Position hold with asymmetric compliance**: While intaking, the arm holds its deployed position via PID, but needs two different behaviors depending on which direction a disturbance pushes it:
+  - **Firm against further deployment** — if gravity or momentum tries to push the arm past the deployed angle, the motor should resist strongly. This prevents the arm from slamming into the ground.
+  - **Soft against upward push** — when a ball is sucked in and pushes the arm upward, the arm should allow slight upward "give" and then gently return to position. This prevents the ball from jamming or bouncing out.
+  - **Why a symmetric PID cap doesn't work**: A single output cap (e.g., ±40%) applies the same force limit in both directions. If you set it low enough for gentle compliance on ball hits, the arm slams down on deploy because gravity adds to the motor force. If you set it high enough to prevent slamming, the arm is too stiff and balls bounce off.
+  - **Solution — roboRIO PID with asymmetric output limits**: Run the PID loop on the roboRIO (not the Spark Max onboard PID) so you can apply different output caps per direction. Use a lower cap for the "return to deployed" direction (compliant, ~25%) and a higher cap for the "resist over-deployment" direction (firm, ~60%). The Spark Max onboard PID does not support asymmetric output limits. Adding a gravity feedforward term (`kG * sin(armAngle)`) further improves behavior by counteracting the arm's weight so the PID only has to handle disturbances.
+  - See `IntakeConstants.kUseRoboRioPid`, `kArmDeployOutput`, `kArmStowOutput`, and `kG` for the relevant constants. Set `kUseRoboRioPid = true` to enable this mode.
 - **Software limits**: The arm motor must be software-limited to prevent rotating past stowed (0°) or past deployed (~120°). Use the `SparkMaxConfig` soft limit settings (e.g., `config.softLimit.forwardSoftLimit(120.0)`) to enforce this — protects the mechanism even if the code has bugs. See the REVLib 2026 config-object pattern in section 5.
 - **Arm gearing**: The arm motor is geared **20:1** for torque. The encoder conversion factor is `360.0 / 20.0 = 18.0` degrees per motor rotation. This is needed to set accurate PID position targets.
 - **Motor directions**: The arm motor direction determines which way is "deploy" vs "stow" — **test on the robot with low power first.** If the arm goes the wrong way, set `config.inverted(true)` on that motor's `SparkMaxConfig` (see REVLib 2026 API table in section 5). Same for the roller motor — it should spin to pull fuel inward toward the robot. Get directions right before tuning anything else.
@@ -493,7 +498,7 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
   - Deployed position (~115° — tune on robot)
   - Arm soft limits (min and max encoder values)
   - Arm PID gains (P, I, D) — start with P only, add D if it oscillates
-  - Arm max output / output cap (for compliance — e.g., limit to ±0.5 so the arm doesn't slam)
+  - Arm output caps — if using Spark Max PID: symmetric cap (e.g., ±0.4). If using roboRIO PID: asymmetric caps — `kArmDeployOutput` (compliant, ~0.25) and `kArmStowOutput` (firm, ~0.6). See section 2.3 "Position hold with asymmetric compliance" for why.
   - Roller motor speed (percent output or voltage)
   - Arm current limit
   - Roller current limit
@@ -504,7 +509,9 @@ Old examples calling methods directly on the Spark Max **will not compile**. If 
   - Get the built-in `RelativeEncoder` from the arm Spark Max
   - Configure the encoder conversion factor: `setPositionConversionFactor(360.0 / gearRatio)` so positions are in degrees
   - Set **software soft limits** on the arm Spark Max. **Note**: REVLib 2026 uses a `SparkMaxConfig` object for configuration — soft limits are set via `config.softLimit.forwardSoftLimit(deployedLimit)` and `config.softLimit.reverseSoftLimit(stowedLimit)`, then applied with `sparkMax.configure(config)`. Do not use the old `setSoftLimit()` method — it no longer exists. This is hardware-level protection that works even if command logic has bugs.
-  - Configure the built-in **PID controller** on the Spark Max (`getClosedLoopController()` — renamed in REVLib 2026, see API table above) with P, I, D gains and output range (cap the output for compliance)
+  - Configure PID — two options:
+    - **Spark Max onboard PID** (simpler): `getClosedLoopController()` with P, I, D gains and a symmetric output range. Works but can't do asymmetric compliance.
+    - **roboRIO PID** (recommended for heavy arms): Use WPILib's `PIDController` class, run the loop in `periodic()`, and apply asymmetric output limits + gravity feedforward. See section 2.3 for details.
   - `deploy()` — set PID target to deployed position via `closedLoopController.setSetpoint(deployedAngle, ControlType.kPosition)`
   - `stow()` — set PID target to stowed position via `closedLoopController.setSetpoint(stowedAngle, ControlType.kPosition)`
   - `runRollers()` — spin roller motor at intake speed

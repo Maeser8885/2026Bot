@@ -15,6 +15,11 @@ package frc.robot;
  */
 public final class Constants {
 
+  // --- Intake PID mode ---
+  // false = IntakeSparkMaxPid (simpler, onboard PID)
+  // true  = IntakeRoboRioPid (gravity feedforward + asymmetric compliance)
+  public static final boolean kUseRoboRioPid = false;
+
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
     public static final int kOperatorControllerPort = 1;

@@ -22,14 +22,10 @@ public final class IntakeConstants {
   public static final float kForwardSoftLimit = 100.0f;
   public static final float kReverseSoftLimit = -5.0f;
 
-  // Arm PID gains — start with P only, add D if it oscillates
+  // Arm PID gains — used by both implementations
   public static final double kArmP = 0.02;
   public static final double kArmI = 0.0;
   public static final double kArmD = 0.0;
-
-  // Arm PID output cap — limits max force for compliance
-  public static final double kArmMaxOutput = 0.4;
-  public static final double kArmMinOutput = -0.4;
 
   // Roller speed (percent output, 0.0 to 1.0)
   public static final double kRollerSpeed = 0.7;
