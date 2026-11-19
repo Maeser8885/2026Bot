@@ -27,12 +27,12 @@ public final class Constants {
   }
 
   public static class DriveConstants {
-    public static LinearVelocity maxSpeed = FeetPerSecond.of(8);
+    public static LinearVelocity maxSpeed = FeetPerSecond.of(15);
   }
 
   public static class ShooterConstants {
     //CAN IDs
-    public static final int shooterCANId = 58; //TODO: Change these ports
+    public static final int shooterCANId = 12; //TODO: Change these ports
     public static final int feederCANId = 51;
 
     //Speeds
@@ -58,7 +58,7 @@ public final class Constants {
 
   public static class IntakeConstants {
     // CAN IDs
-    public static final int kArmMotorId = 50;
+    public static final int kArmMotorId = 58;
     public static final int kRollerMotorId = 48;
 
     // Arm gear ratio (20:1 reduction between NEO and arm pivot)
@@ -66,28 +66,21 @@ public final class Constants {
 
     // Arm positions in degrees (0 = stowed/vertical, positive = deployed)
     public static final double kStowedSetpoint = 0.0;
-    public static final double kDeployedSetpoint = -3.5;
+    public static final double kDeployedSetpoint = 4.5;
 
     // Soft limits — prevent arm from going past physical range
-    public static final float kForwardSoftLimit = 2.0f;
-    public static final float kReverseSoftLimit = -4.0f;
+    public static final float kForwardSoftLimit = 6.0f;
+    public static final float kReverseSoftLimit = -2.0f;
 
     // Arm PID gains — start with P only, add D if it oscillates
-    public static final double kArmDP = 0.25;
+    public static final double kArmDP = 0.07;
+
     public static final double kArmDI = 0.0;
-    public static final double kArmDD = 0.05;
+    public static final double kArmDD = 0.0;
 
-    public static final double kArmHoldP = 1.5;
-    public static final double kArmHoldI = 0.0;
-    public static final double kArmHoldD = 0.0;
+    public static final double kArmG = 0.047;
 
-    public static final double kArmHoldThreshold = 0.5;
-
-    public static final double kArmUP = 0.7;
-    public static final double kArmUI = 0.0; 
-    public static final double kArmUD = 0.0;
-
-    public static final double kArmG = 1.5;
+    public static final double downwardForce = 0.1;
     // Arm PID output cap — limits max force for compliance
     public static final double kArmMaxOutput = 0.1;
     public static final double kArmMinOutput = -0.6;

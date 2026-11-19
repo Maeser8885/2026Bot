@@ -55,7 +55,7 @@ public class RobotContainer {
   private final DriveSubsystem m_driveSubsystem;
   private final VisionSubsystem m_visionSubsystem = new VisionSubsystem();
   private final ShooterSubsystem m_ShooterSubsystem = new ShooterSubsystem();
-  private final IntakeSubsystem m_IntakeSubsystem = new IntakeSubsystem();
+  // private final IntakeSubsystem m_IntakeSubsystem = new IntakeSubsystem();
 
   private final CommandXboxController m_driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
   private final CommandXboxController m_operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);
@@ -68,14 +68,14 @@ public class RobotContainer {
     m_visionSubsystem.setDefaultCommand(m_visionSubsystem.visionUpkeep(m_driveSubsystem));
 
     
-
+    /*&
     NamedCommands.registerCommand("shoot", m_ShooterSubsystem.shootAndFeed());
     NamedCommands.registerCommand("extendIntake", m_IntakeSubsystem.deploy());
     NamedCommands.registerCommand("intake", m_IntakeSubsystem.runRollers());
     NamedCommands.registerCommand("stopIntake", m_IntakeSubsystem.stop());
     NamedCommands.registerCommand("stopShooting", m_ShooterSubsystem.stop());
     NamedCommands.registerCommand("setAngleRightClockwise", m_driveSubsystem.setAngleOffset(90));
-    
+    */
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData(autoChooser);
 
@@ -124,15 +124,15 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-         m_driverController.a().toggleOnTrue(m_driveSubsystem.zeroYaw());
+         m_driverController.start().toggleOnTrue(m_driveSubsystem.zeroYaw());
         
         
-         m_operatorController.povUp().toggleOnTrue(m_IntakeSubsystem.deploy()); // intake extend
-         m_operatorController.povDown().toggleOnTrue(m_IntakeSubsystem.stow());
-         m_operatorController.b().toggleOnTrue(m_IntakeSubsystem.runRollers()); //run intake
-         m_operatorController.x().toggleOnTrue(m_IntakeSubsystem.runRollersReverse()); //run intake reverse
+        //  m_operatorController.povUp().toggleOnTrue(m_IntakeSubsystem.deploy()); // intake extend
+        //  m_operatorController.povDown().toggleOnTrue(m_IntakeSubsystem.stow());
+        //  m_operatorController.b().toggleOnTrue(m_IntakeSubsystem.runRollers()); //run intake
+        //  m_operatorController.x().toggleOnTrue(m_IntakeSubsystem.runRollersReverse()); //run intake reverse
         
-         m_operatorController.b().or(m_operatorController.x()).toggleOnFalse(m_IntakeSubsystem.stopRollers()); //stop intake
+        //  m_operatorController.b().or(m_operatorController.x()).toggleOnFalse(m_IntakeSubsystem.stopRollers()); //stop intake
 
         m_operatorController.a().toggleOnTrue(m_ShooterSubsystem.unfeed());
         m_operatorController.leftTrigger().toggleOnTrue(m_ShooterSubsystem.shootAndFeed()); // Shoot both full speed

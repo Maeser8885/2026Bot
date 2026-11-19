@@ -172,15 +172,14 @@ public class DriveSubsystem extends SubsystemBase {
 
   public Command driveAngularVelocityFO(DoubleSupplier xInput, DoubleSupplier yInput, DoubleSupplier thetaInput){
       return run(() -> {
-        boolean isRed = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red;
 
-        double driveX = isRed? -xInput.getAsDouble() : xInput.getAsDouble();
-        double driveY = isRed? -yInput.getAsDouble() : yInput.getAsDouble();
+       double driveX = xInput.getAsDouble();
+        double driveY = -yInput.getAsDouble();
 
       // method that makes the robot drive, inputting x y and angle inputs multiplied by the maximum velocities
-      swerveDrive.drive(new Translation2d(driveY * swerveDrive.getMaximumChassisVelocity(),
+      swerveDrive.drive(new Translation2d(-driveY * swerveDrive.getMaximumChassisVelocity(),
                                           -driveX * swerveDrive.getMaximumChassisVelocity()),
-                        thetaInput.getAsDouble() * swerveDrive.getMaximumChassisAngularVelocity(), 
+                        -thetaInput.getAsDouble() * swerveDrive.getMaximumChassisAngularVelocity(), 
                         true,
                         false);
     });

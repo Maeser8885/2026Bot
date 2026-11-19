@@ -14,9 +14,11 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.IntakeConstants;
 
 /**
@@ -51,13 +53,17 @@ public class IntakeSubsystem extends SubsystemBase {
   private final SparkMax armMotor;
   private final SparkMax rollerMotor;
   private final RelativeEncoder armEncoder;
-  private final SparkClosedLoopController armController;
 
-  ClosedLoopSlot currentSlot = ClosedLoopSlot.kSlot0; // Start in stowed slot by default
+  double setpoint = 0;
+  double downForce = 0;
+  private PIDController armController;
 
   SparkMaxConfig armConfigSaved;
 
   public IntakeSubsystem() {
+
+    armController = new PIDController(IntakeConstants.kArmDP, IntakeConstants.kArmDI, IntakeConstants.kArmDD);
+    
     // Arm motor — NEO (brushless), geared for torque
     armMotor = new SparkMax(IntakeConstants.kArmMotorId, MotorType.kBrushless);
 
@@ -71,26 +77,13 @@ public class IntakeSubsystem extends SubsystemBase {
     armConfig
         .smartCurrentLimit(IntakeConstants.kArmCurrentLimit)
         .idleMode(IdleMode.kBrake)
-        .inverted(true); // TODO: Test on robot — invert if arm deploys wrong direction
-
+        .inverted(false); // TODO: Test on robot — invert if arm deploys wrong direction
 
 
     
-         // Convert from rotations to radians
+    
     // PID for position control with output capped for compliance
-    armConfig.closedLoop
-        // UP: SLOT 0, DOWN SLOT 1, HOLD SLOT 2
-        .p(IntakeConstants.kArmUP, ClosedLoopSlot.kSlot0)
-        .i(IntakeConstants.kArmUI, ClosedLoopSlot.kSlot0)
-        .d(IntakeConstants.kArmUD, ClosedLoopSlot.kSlot0)
-        .p(IntakeConstants.kArmDP, ClosedLoopSlot.kSlot1)
-        .i(IntakeConstants.kArmDI, ClosedLoopSlot.kSlot1)
-        .d(IntakeConstants.kArmDD, ClosedLoopSlot.kSlot1)
-        .p(IntakeConstants.kArmHoldP, ClosedLoopSlot.kSlot2)
-        .i(IntakeConstants.kArmHoldI, ClosedLoopSlot.kSlot2)
-        .d(IntakeConstants.kArmHoldD, ClosedLoopSlot.kSlot2)
-        .outputRange(IntakeConstants.kArmMinOutput, IntakeConstants.kArmMaxOutput)
-        .feedForward.kG(IntakeConstants.kArmG);
+    
 
       
 
@@ -118,7 +111,6 @@ public class IntakeSubsystem extends SubsystemBase {
         com.revrobotics.PersistMode.kPersistParameters);
 
     armEncoder = armMotor.getEncoder();
-    armController = armMotor.getClosedLoopController();
 
     // Zero the encoder on startup — arm must be in stowed position at power-on
     armEncoder.setPosition(IntakeConstants.kStowedSetpoint);
@@ -131,31 +123,30 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public Command deploy() {
     return run(() -> {
-     double target = IntakeConstants.kDeployedSetpoint;
-     currentSlot = ClosedLoopSlot.kSlot1;
-      double ff = gravityFeedforwardForAngle(armMotor.getEncoder().getPosition());
-      armController.setSetpoint(target, ControlType.kPosition, currentSlot, ff);
+     setpoint = IntakeConstants.kDeployedSetpoint;
+      
     });
   }
 
   public Command stow() {
     return run(() -> {
-     double target = IntakeConstants.kStowedSetpoint;
-     currentSlot = ClosedLoopSlot.kSlot0;
-      double ff = gravityFeedforwardForAngle(armMotor.getEncoder().getPosition());
-      armController.setSetpoint(target, ControlType.kPosition, currentSlot, ff);
+     setpoint = IntakeConstants.kStowedSetpoint;
     });
   }
 
   public Command runRollers() {
+    downForce = 1.0;
     return run(() -> rollerMotor.set(IntakeConstants.kRollerSpeed));
+    
   }
 
   public Command runRollersReverse() {
+    downForce = 1.0;
     return run(() -> rollerMotor.set(-IntakeConstants.kRollerSpeed));
   }
 
   public Command stopRollers() {
+    downForce = 0;
     return run(() -> rollerMotor.set(0));
   }
 
@@ -180,32 +171,38 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public Command nudgeArmTarget(double deltaDegrees) {
     return run(() -> {
-    double target = getArmAngle() + deltaDegrees;
-    target = MathUtil.clamp(target,
-        IntakeConstants.kReverseSoftLimit, IntakeConstants.kForwardSoftLimit);
-    armController.setSetpoint(target, ControlType.kPosition);
+    setpoint += deltaDegrees;
     }
       );
+  }
+
+  public double rotationsToAngleDeg(double angle){
+    return angle * (360/IntakeConstants.kArmGearRatio);
+  }
+
+  public double rotationsToAngleRad(double angle){
+    return angle * ((2 * Math.PI)/IntakeConstants.kArmGearRatio);
   }
 
   @Override
   public void periodic() {
     
-    
-      double ff = gravityFeedforwardForAngle(armMotor.getEncoder().getPosition());
-      armController.setSetpoint(armController.getSetpoint(), ControlType.kPosition, currentSlot, ff);
+    double output;
 
-      if(currentSlot == ClosedLoopSlot.kSlot1 && Math.abs(armController.getSetpoint() - getArmAngle()) < IntakeConstants.kArmHoldThreshold) {
-        currentSlot = ClosedLoopSlot.kSlot2;
-      } else if (currentSlot == ClosedLoopSlot.kSlot2 && Math.abs(armController.getSetpoint() - getArmAngle()) >= IntakeConstants.kArmHoldThreshold) {
-        currentSlot = ClosedLoopSlot.kSlot1;
-      }
+    output = armController.calculate(armEncoder.getPosition(), setpoint);
 
-    SmartDashboard.putNumber("Intake/Arm Setpoint", armController.getSetpoint());
-    SmartDashboard.putNumber("Intake/Arm Slot", currentSlot.value);
+    output -= IntakeConstants.kArmG * Math.sin(rotationsToAngleDeg(armEncoder.getPosition()));
+
+    output += downForce * IntakeConstants.downwardForce;
     
+    armMotor.set(output + 0.1);
+
+
+
+    SmartDashboard.putNumber("setpoint", setpoint);
+    SmartDashboard.putNumber("DownForce", downForce);
     SmartDashboard.putNumber("arm output", armMotor.getAppliedOutput());
-    SmartDashboard.putNumber("Intake/Arm Angle", getArmAngle());
+    SmartDashboard.putNumber("Intake/Arm Angle", rotationsToAngleDeg(getArmAngle()));
     SmartDashboard.putNumber("Intake/Roller Output", rollerMotor.getAppliedOutput());
     SmartDashboard.putBoolean("Intake/Arm Deployed",
         isAtPosition(IntakeConstants.kDeployedSetpoint));
